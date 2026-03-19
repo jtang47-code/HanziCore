@@ -1,0 +1,1970 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>HanziCore</title>
+
+    <!-- iOS & Android App Icons and Settings -->
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="apple-mobile-web-app-title" content="Readlee">
+    <meta name="application-name" content="HanziCore">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#fdfaee" id="themeColorMeta">
+
+    <!-- Dynamic Web App Manifest & Service Worker for Desktop PWA Installation -->
+    <link rel="manifest" id="pwa-manifest">
+    <script>
+        (function() {
+            // Generate Manifest dynamically to ensure absolute path for icon.png
+            const iconUrl = new URL('icon.png', window.location.href).href;
+            const manifest = {
+                name: "HanziCore",
+                short_name: "HanziCore",
+                start_url: window.location.pathname,
+                display: "standalone",
+                background_color: "#fdfaee",
+                theme_color: "#fdfaee",
+                icons: [
+                    { src: iconUrl, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+                    { src: iconUrl, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+                ]
+            };
+            const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/manifest+json'});
+            document.getElementById('pwa-manifest').href = URL.createObjectURL(manifestBlob);
+
+            // Dummy Service Worker to satisfy Chrome's installation requirements
+            if ('serviceWorker' in navigator) {
+                const swCode = "self.addEventListener('fetch', () => {});";
+                const swBlob = new Blob([swCode], {type: 'application/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+            }
+        })();
+    </script>
+
+
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
+      :root {
+        --bg: #f4f5f7;
+        --panel: #ffffff;
+        --text: #2d3748;
+        --muted: #718096;
+        --border: #e2e8f0;
+        --accent: #1a202c; /* Dark charcoal/slate */
+        --accent-soft: #edf2f7;
+        --success: #4a5568; 
+        --danger: #718096;  
+        --warning: #4a5568;
+        --shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        --radius: 4px; /* Flat, sharp aesthetic */
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      
+      * {
+        box-sizing: border-box;
+      }
+      
+      body {
+        margin: 0;
+        font-family: 'Montserrat', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        overflow-x: hidden;
+      }
+      
+      /* Smooth animations for all injected content */
+      .animate-enter {
+        animation: fadeUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      }
+      
+      .animate-pop {
+        animation: popIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      }
+      
+      @keyframes fadeUp {
+        0% { opacity: 0; transform: translateY(15px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      
+      @keyframes popIn {
+        0% { opacity: 0; transform: scale(0.95); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+
+      .app {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 24px;
+        padding-bottom: 120px;
+      }
+      
+      .hero {
+        background: var(--accent);
+        color: #ffffff;
+        border-radius: var(--radius);
+        padding: 60px 30px;
+        text-align: center;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow);
+      }
+      
+      .hero h1 {
+        margin: 0 0 16px;
+        font-size: 36px;
+        font-weight: 800;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: #ffffff;
+      }
+      
+      .hero p, .helper {
+        color: #a0aec0;
+        line-height: 1.8;
+        margin: 0 auto;
+        font-weight: 300;
+        letter-spacing: 0.5px;
+        max-width: 700px;
+      }
+
+      .panel, .sub-nav {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+      
+      .sub-nav {
+        padding: 20px 24px;
+        margin-bottom: 20px;
+      }
+      
+      .panel {
+        padding: 32px;
+      }
+      
+      h2, h3 {
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+        color: var(--accent);
+      }
+      
+      /* Shared Buttons */
+      button {
+        border: none;
+        border-radius: var(--radius);
+        padding: 12px 18px;
+        font-weight: 600;
+        font-family: 'Montserrat', sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: var(--transition);
+      }
+      
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+        border: 1px solid var(--accent);
+      }
+      .btn-primary:hover {
+        background: transparent;
+        color: var(--accent);
+      }
+      
+      .btn-secondary {
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid var(--border);
+      }
+      .btn-secondary:hover {
+        background: var(--accent-soft);
+        border-color: var(--accent);
+      }
+      
+      /* DB Nav & Chips */
+      .pill-container {
+        text-align: center;
+        margin: 24px 0;
+      }
+      
+      .pill-switcher {
+        display: inline-flex;
+        background: transparent;
+        border-bottom: 1px solid var(--border);
+        padding: 0;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      
+      .pill-switcher button {
+        background: transparent;
+        border: none;
+        padding: 12px 4px;
+        border-radius: 0;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+      }
+      
+      .pill-switcher button:hover {
+        color: var(--accent);
+      }
+      
+      .pill-switcher button.active {
+        color: var(--accent);
+        box-shadow: 0 2px 0 0 var(--accent); /* Minimalist underline */
+      }
+      
+      .chip-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      
+      .chip {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        padding: 8px 14px;
+        border-radius: var(--radius);
+        font-size: 12px;
+        font-weight: 500;
+      }
+      
+      .chip:hover {
+        border-color: var(--muted);
+        color: var(--accent);
+      }
+      
+      .chip.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        font-weight: 600;
+      }
+      
+      .chip.small {
+        font-size: 11px;
+        padding: 6px 12px;
+      }
+      
+      /* Shared Grid & Cards */
+      .section {
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+      }
+      
+      .tone-grid, .vocab-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+      
+      .card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        transition: var(--transition);
+      }
+      
+      .card:hover {
+        box-shadow: var(--shadow);
+        border-color: #cbd5e1;
+      }
+      
+      .card.uncommon {
+        background: #fafafa;
+        border-style: dashed;
+      }
+      
+      .big {
+        font-size: 40px;
+        font-weight: 300;
+        margin-bottom: 8px;
+        color: var(--accent);
+      }
+      
+      .pinyin {
+        font-size: 18px;
+        font-weight: 400;
+        letter-spacing: 1px;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+      
+      .meaning {
+        color: var(--text);
+        margin-bottom: 12px;
+        line-height: 1.6;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      
+      .explanation {
+        margin-top: auto;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.6;
+        margin-bottom: 16px;
+        font-weight: 300;
+      }
+      
+      .label {
+        display: inline-block;
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 2px;
+        padding: 4px 8px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+        align-self: flex-start;
+      }
+      
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: auto;
+      }
+
+      /* Tracker Dashboard Styles */
+      .tracker-dashboard {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+      
+      .tracker-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        padding: 24px;
+        background: #ffffff;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+      }
+      
+      .streak-box {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      
+      .streak-icon {
+        font-size: 28px;
+        opacity: 0.8;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .streak-info h3 {
+        margin: 0;
+        color: var(--accent);
+        font-size: 24px;
+        letter-spacing: 0;
+      }
+      
+      .streak-info p {
+        margin: 0;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--muted);
+      }
+      
+      .target-selector {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      
+      .target-selector select {
+        padding: 10px 16px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 600;
+        color: var(--accent);
+        background: transparent;
+        cursor: pointer;
+        outline: none;
+      }
+      
+      .progress-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 20px;
+      }
+      
+      .progress-card {
+        border: 1px solid var(--border);
+        padding: 24px;
+        border-radius: var(--radius);
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        transition: var(--transition);
+      }
+      
+      .progress-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: var(--shadow);
+      }
+      
+      .progress-title {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 700;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        color: var(--accent);
+      }
+      
+      .progress-bar-bg {
+        width: 100%;
+        height: 4px;
+        background: var(--accent-soft);
+        border-radius: 0;
+        overflow: hidden;
+      }
+      
+      .progress-bar-fill {
+        height: 100%;
+        background: var(--accent);
+        border-radius: 0;
+        transition: width 0.5s ease;
+      }
+      
+      .start-category-btn {
+        width: 100%;
+        padding: 14px;
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid var(--border);
+        font-weight: 600;
+        font-size: 11px;
+        margin-top: 20px;
+      }
+      
+      .start-category-btn:hover {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+      
+      /* Flashcard Review UI */
+      .review-session {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+      }
+      
+      .review-header {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+        font-weight: 500;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--muted);
+      }
+      
+      .flashcard-area {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        height: 380px;
+        perspective: 1000px;
+        margin-bottom: 32px;
+      }
+      
+      .flashcard {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 32px;
+        text-align: center;
+        transform-origin: bottom center;
+        user-select: none;
+        cursor: grab;
+      }
+      
+      .flashcard:active {
+        cursor: grabbing;
+      }
+      
+      .fc-type {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        color: var(--muted);
+        border: 1px solid var(--border);
+        padding: 4px 10px;
+        border-radius: 2px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-weight: 600;
+      }
+      
+      .fc-level {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      
+      .fc-big {
+        font-size: 64px;
+        font-weight: 300;
+        margin-bottom: 12px;
+        color: var(--accent);
+        line-height: 1.1;
+      }
+      
+      .fc-pinyin {
+        font-size: 20px;
+        color: var(--muted);
+        font-weight: 400;
+        letter-spacing: 2px;
+        margin-bottom: 16px;
+      }
+      
+      .fc-meaning {
+        font-size: 15px;
+        color: var(--text);
+        font-weight: 500;
+        max-width: 90%;
+      }
+      
+      .fc-grammar-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      
+      .fc-grammar-ex {
+        background: var(--bg);
+        padding: 16px;
+        border-radius: var(--radius);
+        margin-top: 20px;
+        font-size: 14px;
+        border: 1px solid var(--border);
+        width: 100%;
+        text-align: left;
+      }
+      
+      .play-btn-card {
+        margin-top: 24px;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+      .play-btn-card:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      
+      .review-controls {
+        display: flex;
+        gap: 16px;
+        width: 100%;
+        max-width: 400px;
+      }
+      
+      .control-btn {
+        flex: 1;
+        padding: 20px;
+        font-size: 18px;
+        background: transparent;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .btn-fail {
+        border: 1px solid var(--border);
+        color: var(--danger);
+      }
+      .btn-fail:hover:not(.disabled) {
+        background: var(--bg);
+        border-color: var(--danger);
+      }
+      
+      .btn-pass {
+        border: 1px solid var(--border);
+        color: var(--success);
+      }
+      .btn-pass:hover:not(.disabled) {
+        background: var(--bg);
+        border-color: var(--success);
+      }
+      
+      .control-btn.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+      
+      .control-btn span {
+        font-size: 10px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        opacity: 0.8;
+      }
+      
+      .freeze-bar-container {
+        width: 100%;
+        max-width: 400px;
+        height: 2px;
+        background: var(--border);
+        margin-bottom: 24px;
+        overflow: hidden;
+      }
+      
+      .freeze-bar {
+        height: 100%;
+        background: var(--accent);
+        width: 100%;
+        transition: width 1s linear;
+      }
+      
+      .session-complete {
+        text-align: center;
+        padding: 60px 20px;
+      }
+      
+      .session-complete h2 {
+        font-size: 28px;
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+
+      /* DB Audio & Layout Extras */
+      .audio-loader {
+        margin: 0 0 24px 0;
+        padding: 20px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .audio-loader.hidden {
+        display: none;
+      }
+      .audio-loader-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .audio-status {
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+      .builder-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 16px;
+        margin-top: 24px;
+      }
+      .summary-card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+        background: #fff;
+      }
+      .k {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--muted);
+        margin-bottom: 8px;
+      }
+      .v {
+        font-size: 24px;
+        font-weight: 300;
+        color: var(--accent);
+      }
+      .empty {
+        border: 1px dashed var(--border);
+        border-radius: var(--radius);
+        padding: 32px;
+        color: var(--muted);
+        background: transparent;
+        text-align: center;
+        font-weight: 300;
+      }
+
+      /* Base layout components for Grammar blocks (used in Tracker & DB) */
+      .grammar-structure {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+      }
+      .struct-box {
+        padding: 8px 14px;
+        border-radius: 2px;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .sentence-block {
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 24px;
+        margin-bottom: 24px;
+        transition: var(--transition);
+      }
+      .sentence-block:hover {
+        border-color: #cbd5e1;
+      }
+      .words-container {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+      .word-box {
+        cursor: pointer;
+        text-align: center;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px 20px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: var(--transition);
+      }
+      .word-box:hover {
+        transform: translateY(-2px);
+        border-color: var(--muted);
+      }
+      
+      .word-hz {
+        font-size: 32px;
+        font-weight: 300;
+        margin-bottom: 8px;
+        color: var(--accent);
+      }
+      .word-py {
+        font-size: 14px;
+        color: var(--muted);
+        font-weight: 400;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+      }
+      .word-type {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        padding: 4px 8px;
+        border-radius: 2px;
+        font-weight: 600;
+      }
+      
+      /* Muted, high-class color scheme for grammar tags */
+      .type-subject { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+      .type-verb { background: #f8fafc; color: #52525b; border: 1px solid #d4d4d8; }
+      .type-object { background: #f0f4f8; color: #64748b; border: 1px solid #e2e8f0; }
+      .type-adjective { background: #f4f4f5; color: #4b5563; border: 1px solid #e5e7eb; }
+      .type-particle { background: #fafafa; color: #3f3f46; border: 1px solid #e4e4e7; }
+      .type-tense { background: #f9fafb; color: #52525b; border: 1px solid #e5e7eb; }
+      
+      .type-bg-subject { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+      .type-bg-verb { background: #f8fafc; color: #52525b; border: 1px solid #d4d4d8; }
+      .type-bg-object { background: #f0f4f8; color: #64748b; border: 1px solid #e2e8f0; }
+      .type-bg-adjective { background: #f4f4f5; color: #4b5563; border: 1px solid #e5e7eb; }
+      .type-bg-particle { background: #fafafa; color: #3f3f46; border: 1px solid #e4e4e7; }
+      .type-bg-tense { background: #f9fafb; color: #52525b; border: 1px solid #e5e7eb; }
+
+      @media (max-width: 768px) {
+        .builder-summary { grid-template-columns: 1fr; }
+        .hero { padding: 40px 20px; }
+        .hero h1 { font-size: 28px; letter-spacing: 2px; }
+      }
+
+      /* Bottom Navigation Toggle */
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        z-index: 1000;
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .bottom-nav a {
+        text-decoration: none;
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 140px;
+        height: 60px;
+        border-radius: 12px;
+        transition: var(--transition);
+      }
+      .bottom-nav a:hover {
+        color: var(--accent);
+        background: #f8fafc;
+      }
+      .bottom-nav a.active {
+        color: var(--accent);
+        background: var(--accent-soft);
+      }
+      .bottom-nav a .icon {
+        width: 22px;
+        height: 22px;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .bottom-nav a.active .icon {
+        transform: translateY(-2px);
+        stroke-width: 2.5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <section class="hero animate-enter" id="heroSection">
+        <div>
+          <h1 id="heroTitle">DAILY REVIEW</h1>
+          <p class="helper" id="heroDesc" style="color: #cbd5e1;">Swipe right when you know a card. Swipe left to review it again. Pass a card twice to master it.</p>
+        </div>
+      </section>
+
+      <!-- Database Top Tab Control (Hidden in Tracker Mode) -->
+      <div class="pill-container animate-enter" id="dbTopTabs" style="display: none;">
+        <div class="pill-switcher" id="topTabs"></div>
+      </div>
+      
+      <!-- Audio Error Loader -->
+      <div class="audio-loader hidden animate-enter" id="audioLoader">
+        <strong>Audio manifest not loaded</strong>
+        <div class="audio-status" id="audioStatus">
+          If you opened this HTML directly from your computer, the browser may block local audio JSON loading. You can choose the audio_manifest.json file manually, or dismiss this message to automatically fall back to Robot Voice (TTS) instead.
+        </div>
+        <div class="audio-loader-row">
+          <input type="file" id="audioManifestFile" accept=".json,application/json" style="font-size: 12px;" />
+          <button class="btn-primary" id="retryAudioManifestBtn" type="button">Retry</button>
+          <button class="btn-secondary" id="dismissAudioBtn" type="button">Dismiss & Use Robot Voice</button>
+        </div>
+      </div>
+
+      <!-- Database Sub-Nav (Hidden in Tracker Mode) -->
+      <nav class="sub-nav animate-enter" id="dbSubNav" style="display: none;"></nav>
+
+      <!-- Main Dynamic View Area -->
+      <main class="panel animate-enter" id="contentPanel"></main>
+    </div>
+
+    <!-- Bottom Navigation Toggle -->
+    <nav class="bottom-nav">
+      <a href="#" id="navTracker" class="active">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="8" width="18" height="13" rx="2" ry="2"></rect>
+          <path d="M5 8v-2a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2"></path>
+          <path d="M9 14.5l2 2 4-4"></path>
+        </svg>
+        <span>Daily Reviews</span>
+      </a>
+      <a href="#" id="navDatabase">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+        </svg>
+        <span>Database</span>
+      </a>
+    </nav>
+
+    <!-- Load the external database -->
+    <script src="chinese_beginner_database.js"></script>
+
+    <!-- App Logic -->
+    <script>
+      const EMPTY_DB = {
+        vowels: [], toneDatabase: {}, initials: [], allFinals: [], validFinalsByInitial: {},
+        combinationMap: {}, grammarData: [], vocabularyData: {}, AUDIO_MANIFEST_URL: '', AUDIO_BASE_PATH: ''
+      };
+
+      let vowels = [], toneDatabase = {}, initials = [], allFinals = [], validFinalsByInitial = {},
+          combinationMap = {}, grammarData = [], vocabularyData = {}, AUDIO_MANIFEST_URL = '', AUDIO_BASE_PATH = '';
+
+      function getDB() {
+        return window.CHINESE_BEGINNER_DB || EMPTY_DB;
+      }
+
+      function applyDbPatches(db) {
+        if (!db || db.__shellPatched) return;
+        if (db.grammarData) {
+          db.grammarData.forEach(g => {
+            if (g.examples) {
+              g.examples.forEach(ex => {
+                ex.words.forEach(w => {
+                  if (w.hanzi === "不") { w.pinyin = "bù"; if (w.audio) w.audio = [["bu", 4]]; }
+                  if (w.hanzi === "一") { w.pinyin = "yī"; if (w.audio) w.audio = [["yi", 1]]; }
+                  if (w.hanzi === "谁") { w.pinyin = "shuí"; if (w.audio) w.audio = [["shui", 2]]; }
+                  if (w.hanzi === "什么") { w.pinyin = "shénme"; if (w.audio) w.audio = [["shen", 2], ["me", 5]]; }
+                  if (w.hanzi === "哪儿" || w.meaning === "where" || w.hanzi === "哪里") {
+                    w.hanzi = "哪里"; w.pinyin = "nǎlǐ"; w.audio = [["na", 3], ["li", 3]];
+                  }
+                });
+              });
+            }
+          });
+        }
+        if (db.vocabularyData) {
+          Object.values(db.vocabularyData).forEach(cat => {
+            cat.forEach(w => {
+              if (w.hanzi === "谁") { w.pinyin = "shuí"; if (w.audio) w.audio = [["shui", 2]]; }
+              if (w.hanzi === "什么") { w.pinyin = "shénme"; if (w.audio) w.audio = [["shen", 2], ["me", 5]]; }
+              if (w.hanzi === "哪儿" || (w.meaning && w.meaning.includes("where")) || w.hanzi === "哪里") {
+                w.hanzi = "哪里"; w.pinyin = "nǎlǐ"; w.audio = [["na", 3], ["li", 3]];
+              }
+            });
+          });
+        }
+        db.__shellPatched = true;
+      }
+
+      function syncDbRefs() {
+        const db = getDB();
+        applyDbPatches(db);
+        ({ vowels = [], toneDatabase = {}, initials = [], allFinals = [], validFinalsByInitial = {}, combinationMap = {}, grammarData = [], vocabularyData = {}, AUDIO_MANIFEST_URL = '', AUDIO_BASE_PATH = '' } = db);
+      }
+
+      function ensureStateMatchesDb() {
+        syncDbRefs();
+        appState.activeVowel = vowels.includes(appState.activeVowel) ? appState.activeVowel : (vowels[0] || 'e');
+        appState.selectedInitial = initials.includes(appState.selectedInitial) ? appState.selectedInitial : (initials.includes('m') ? 'm' : (initials[0] || '∅'));
+        const finals = getAvailableFinals(appState.selectedInitial);
+        appState.selectedFinal = finals.includes(appState.selectedFinal) ? appState.selectedFinal : (finals[0] || 'a');
+        appState.activeGrammar = grammarData.some(g => g.id === appState.activeGrammar) ? appState.activeGrammar : grammarData[0]?.id;
+        const vocabCats = Object.keys(vocabularyData || {});
+        appState.activeVocabCategory = vocabCats.includes(appState.activeVocabCategory) ? appState.activeVocabCategory : vocabCats[0];
+      }
+
+      function getNeutralToneItems() {
+        syncDbRefs();
+        const explicit = Array.isArray(getDB().neutralToneEssentials) ? getDB().neutralToneEssentials.map(item => ({ ...item })) : [];
+        const derived = [];
+        Object.entries(combinationMap || {}).forEach(([key, items]) => {
+          (items || []).forEach(item => {
+            if (Number(item.tone) === 5) derived.push({ key, tone: 5, pinyin: item.pinyin || key, hanzi: item.hanzi || '—', meaning: item.meaning || '', note: item.note || 'Neutral tone' });
+          });
+        });
+        const merged = [...explicit, ...derived].filter(item => item && item.pinyin);
+        const seen = new Set();
+        return merged.filter(item => {
+          const id = `${item.key || item.pinyin}|${item.hanzi}|${item.pinyin}`;
+          if (seen.has(id)) return false;
+          seen.add(id);
+          return true;
+        });
+      }
+
+      syncDbRefs();
+
+      const TRACKER_DB_KEY = "CHINESE_BEGINNER_APP_TRACKING_DATA";
+
+      let appState = {
+        mode: 'tracker',
+        dbActiveTab: 'tones', 
+        activeVowel: vowels[0] || "e",
+        selectedInitial: "m",
+        selectedFinal: (validFinalsByInitial.m || ["a"])[0],
+        activeGrammar: grammarData[0]?.id,
+        activeVocabCategory: Object.keys(vocabularyData || {})[0]
+      };
+
+      // --- Audio Logic ---
+      let audioManifest = null,
+          audioManifestPromise = null,
+          sharedAudioPlayer = null,
+          isSequencePlaying = false;
+
+      function ensureAudioPlayer() {
+        return sharedAudioPlayer || (sharedAudioPlayer = new Audio()), sharedAudioPlayer;
+      }
+
+      function showAudioLoader(msg = "") {
+        if(window.audioDismissed) return;
+        const loader = document.getElementById("audioLoader");
+        const status = document.getElementById("audioStatus");
+        if(loader) loader.classList.remove("hidden");
+        if(status && msg) status.textContent = msg;
+      }
+
+      function hideAudioLoader() {
+        const loader = document.getElementById("audioLoader");
+        if(loader) loader.classList.add("hidden");
+      }
+
+      async function tryFetchAudioManifest() {
+        if (!AUDIO_MANIFEST_URL) throw new Error("No manifest URL provided by DB.");
+        const res = await fetch(AUDIO_MANIFEST_URL);
+        if (!res.ok) throw new Error(`Failed to load audio manifest: ${res.status}`);
+        return res.json();
+      }
+
+      async function loadAudioManifest() {
+        ensureStateMatchesDb();
+        ensureStateMatchesDb();
+        if (audioManifest) return audioManifest;
+        if (!audioManifestPromise) {
+          audioManifestPromise = tryFetchAudioManifest()
+            .then(data => {
+              audioManifest = data;
+              hideAudioLoader();
+              return data;
+            })
+            .catch(err => {
+              console.error(err);
+              showAudioLoader();
+              return null; // Resolve to null so we handle fallback gracefully
+            });
+        }
+        return audioManifestPromise;
+      }
+
+      function getNormalizedAudioPath(path) {
+        return path ? (path.startsWith("http://") || path.startsWith("https://") ? path : `${AUDIO_BASE_PATH}${path}`) : "";
+      }
+
+      function getAudioPathForBuilderItem(key, tone) {
+        if (!audioManifest || !audioManifest.bySyllable) return "";
+        const syllableData = audioManifest.bySyllable[key];
+        if (!syllableData || !syllableData.tones) return "";
+        let audioObj = syllableData.tones[String(tone)];
+        if (!audioObj && tone === 5) {
+          audioObj = syllableData.tones[1] || syllableData.tones[4];
+        }
+        return audioObj ? audioObj.audioPath : "";
+      }
+
+      function normalizePinyinForLookup(text = "") {
+        return String(text || "").trim().toLowerCase().replace(/shei/g, "shui").replace(/shéi/g, "shuí");
+      }
+
+      function findManifestUtterance(kind, textValue, pinyinValue = "") {
+        if (!audioManifest || !textValue) return null;
+        const normalizedText = String(textValue || "").trim();
+        const normalizedPinyin = normalizePinyinForLookup(pinyinValue);
+
+        const pool = kind === "sentence"
+          ? (audioManifest.sentencesByText && audioManifest.sentencesByText[normalizedText]) || audioManifest.sentences || []
+          : (audioManifest.wordsByText && audioManifest.wordsByText[normalizedText]) || audioManifest.words || [];
+
+        let best = null;
+        for (const item of pool) {
+          if (!item || item.text !== normalizedText) continue;
+          if (!best) best = item;
+          if (normalizedPinyin && normalizePinyinForLookup(item.displayPinyin) === normalizedPinyin) return item;
+        }
+        return best;
+      }
+
+      async function playManifestUtterance(kind, textValue, pinyinValue = "") {
+        if (!(await loadAudioManifest())) return false;
+        const match = findManifestUtterance(kind, textValue, pinyinValue);
+        if (!match || !match.audioPath) return false;
+        const player = ensureAudioPlayer();
+        player.src = getNormalizedAudioPath(match.audioPath);
+        try {
+          await player.play();
+          return true;
+        } catch (e) {
+          console.error(e);
+          return false;
+        }
+      }
+
+      async function playManifestAudioByKeyTone(key, tone) {
+        if (!(await loadAudioManifest())) return false; // Graceful fallback
+        const path = getAudioPathForBuilderItem(key, tone);
+        if (!path) return false;
+        
+        const player = ensureAudioPlayer();
+        player.src = getNormalizedAudioPath(path);
+        try {
+          await player.play();
+          return true;
+        } catch (e) {
+          console.error(e);
+          return false;
+        }
+      }
+
+      const FORCED_SINGLE_CHAR_AUDIO = {"了": ["le", 1], "都": ["dou", 1]};
+      async function playForcedWordAudio(textValue, pinyinValue = "") {
+        const text = String(textValue || "").trim();
+        if (!text) return false;
+        if (text.length === 1 && FORCED_SINGLE_CHAR_AUDIO[text]) {
+          const [key, tone] = FORCED_SINGLE_CHAR_AUDIO[text];
+          if (await playManifestAudioByKeyTone(key, tone)) return true;
+        }
+        if (text === "哪里" || normalizePinyinForLookup(pinyinValue) === "nǎlǐ".toLowerCase()) {
+          if (await playManifestUtterance("word", "哪里", "nǎlǐ")) return true;
+        }
+        return false;
+      }
+
+      async function playAudioSequentially(sequence, fallbackText) {
+        if (isSequencePlaying) return;
+        isSequencePlaying = true;
+        if (!(await loadAudioManifest())) {
+          isSequencePlaying = false;
+          if (fallbackText) speakText(fallbackText);
+          return;
+        }
+        
+        // Ensure all components of the audio sequence exist. If any piece is missing, fallback to TTS for the entire phrase.
+        let allPathsExist = true;
+        let paths = [];
+        for (const [key, tone] of sequence) {
+          const path = getAudioPathForBuilderItem(key, tone);
+          if (!path) {
+            allPathsExist = false;
+            break;
+          }
+          paths.push(path);
+        }
+
+        if (!allPathsExist) {
+          isSequencePlaying = false;
+          if (fallbackText) speakText(fallbackText);
+          return;
+        }
+
+        for (const path of paths) {
+          await new Promise(resolve => {
+            const a = new Audio(getNormalizedAudioPath(path));
+            a.onended = resolve;
+            a.onerror = resolve;
+            a.play().catch(() => resolve());
+          });
+        }
+        isSequencePlaying = false;
+      }
+
+      function setupAudioLoaderControls() {
+        const fileInput = document.getElementById("audioManifestFile");
+        const retryBtn = document.getElementById("retryAudioManifestBtn");
+        const dismissBtn = document.getElementById("dismissAudioBtn");
+        
+        if(fileInput) {
+          fileInput.addEventListener("change", async e => {
+            const file = e.target.files && e.target.files[0];
+            if (file) {
+              try {
+                audioManifest = JSON.parse(await file.text());
+                audioManifestPromise = Promise.resolve(audioManifest);
+                hideAudioLoader();
+                alert("Audio manifest loaded successfully!");
+              } catch (err) {
+                console.error(err);
+                showAudioLoader("That file could not be read as valid JSON.");
+              }
+            }
+          });
+        }
+        
+        if(retryBtn) {
+          retryBtn.addEventListener("click", async () => {
+            audioManifest = null;
+            audioManifestPromise = null;
+            await loadAudioManifest();
+          });
+        }
+
+        if(dismissBtn) {
+          dismissBtn.addEventListener("click", () => {
+            window.audioDismissed = true;
+            hideAudioLoader();
+          });
+        }
+      }
+
+      // --- Tracker Logic & Data ---
+      let trackerData = {
+        streak: 0,
+        lastActiveDate: null,
+        dailyTarget: 10,
+        cardsState: {}, 
+        todayProgress: { date: null, count: 0 }
+      };
+
+      let reviewQueue = [];
+      let currentCardIndex = 0;
+      let sessionTarget = 0;
+      let sessionCompleted = 0;
+      let freezeTimer = 0;
+      let freezeInterval = null;
+      let isDragging = false;
+      let startX = 0;
+      let currentX = 0;
+
+      function getTodayString() {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      function parseDateString(ds) {
+        const parts = ds.split('-');
+        return new Date(parts[0], parts[1] - 1, parts[2]); 
+      }
+
+      function loadTrackerData() {
+        const saved = localStorage.getItem(TRACKER_DB_KEY);
+        if (saved) {
+          try { trackerData = { ...trackerData, ...JSON.parse(saved) }; } 
+          catch (e) { console.error("Could not parse tracker data"); }
+        }
+        
+        const todayStr = getTodayString();
+        if (trackerData.todayProgress.date !== todayStr) {
+          trackerData.todayProgress = { date: todayStr, count: 0 };
+          updateStreak(todayStr);
+        }
+        saveTrackerData();
+      }
+
+      function saveTrackerData() {
+        localStorage.setItem(TRACKER_DB_KEY, JSON.stringify(trackerData));
+      }
+
+      function updateStreak(todayStr) {
+        if (!trackerData.lastActiveDate) return; 
+        
+        const lastDate = parseDateString(trackerData.lastActiveDate);
+        const todayDate = parseDateString(todayStr);
+        const diffTime = todayDate.getTime() - lastDate.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
+        
+        // Ensure a completely missed day resets streak to 0
+        if (diffDays > 1) {
+          trackerData.streak = 0; 
+        }
+      }
+
+      // THIS FUNCTION IS ONLY CALLED UPON FINISHING THE REVIEW DECK
+      function markSessionActive() {
+        const todayStr = getTodayString();
+        
+        if (trackerData.lastActiveDate !== todayStr) {
+          if (!trackerData.lastActiveDate) {
+            trackerData.streak = 1;
+          } else {
+            const lastDate = parseDateString(trackerData.lastActiveDate);
+            const todayDate = parseDateString(todayStr);
+            const diffTime = todayDate.getTime() - lastDate.getTime();
+            const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)); 
+
+            if (diffDays === 1) {
+              trackerData.streak++; 
+            } else if (diffDays > 1) {
+              trackerData.streak = 1; // Missed days resets it to 1 upon completing a new one
+            }
+          }
+          trackerData.lastActiveDate = todayStr;
+          saveTrackerData();
+        }
+      }
+
+      function generateAllCards() {
+        const cards = [];
+        Object.keys(toneDatabase).forEach(v => {
+          toneDatabase[v].forEach((item, idx) => cards.push({ id: `tone_${v}_${idx}`, type: 'tones', ...item }));
+        });
+        Object.keys(combinationMap).forEach(key => {
+          combinationMap[key].forEach(item => {
+            if(item.common) cards.push({ id: `pinyin_${key}_${item.tone}`, type: 'tones', ...item });
+          });
+        });
+        // Flatten grammar into individual example sentences
+        grammarData.forEach(g => {
+          if (g.examples) {
+            g.examples.forEach((ex, idx) => {
+              cards.push({ id: `grammar_${g.id}_${idx}`, type: 'grammar', title: g.title, desc: g.explanation, example: ex });
+            });
+          }
+        });
+        Object.keys(vocabularyData).forEach(cat => {
+          vocabularyData[cat].forEach((v, idx) => cards.push({ id: `vocab_${cat}_${idx}`, type: 'vocab', ...v }));
+        });
+        return cards;
+      }
+
+      function getCategoryProgress(cards) {
+        let stats = { tones: { total: 0, learned: 0, reviewed: 0 }, grammar: { total: 0, learned: 0, reviewed: 0 }, vocab: { total: 0, learned: 0, reviewed: 0 } };
+        cards.forEach(c => {
+          if (!stats[c.type]) return;
+          stats[c.type].total++;
+          const state = trackerData.cardsState[c.id] || 0;
+          if (state >= 1) stats[c.type].reviewed++;
+          if (state >= 2) stats[c.type].learned++;
+        });
+        return stats;
+      }
+
+      function prepareDailyQueue(category) {
+        const allCards = generateAllCards();
+        let filteredCards = category === 'all' ? allCards : allCards.filter(c => c.type === category);
+        const available = filteredCards.filter(c => trackerData.cardsState[c.id] !== 2);
+        
+        available.sort(() => 0.5 - Math.random());
+        reviewQueue = available.slice(0, trackerData.dailyTarget);
+        currentCardIndex = 0;
+        sessionTarget = reviewQueue.length;
+        sessionCompleted = 0;
+      }
+
+      function handleCardAnswer(isKnown) {
+        const card = reviewQueue[currentCardIndex];
+        let level = trackerData.cardsState[card.id] || 0;
+
+        if (isKnown) {
+          level += 1; 
+          trackerData.cardsState[card.id] = level;
+          trackerData.todayProgress.count++;
+          saveTrackerData();
+          sessionCompleted++;
+        } else {
+          level = 0;  
+          trackerData.cardsState[card.id] = level;
+          saveTrackerData();
+          // Push to end of review queue so user is forced to see it again. Total target stays the same.
+          reviewQueue.push(card);
+        }
+
+        currentCardIndex++;
+        renderReviewSession();
+      }
+
+      function speakText(text) {
+        if (!("speechSynthesis" in window)) return;
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = "zh-CN";
+        msg.rate = 0.85;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(msg);
+      }
+
+      // --- Tracker Rendering Logic ---
+      function renderReviewDashboard() {
+        ensureStateMatchesDb();
+        const panel = document.getElementById("contentPanel");
+        
+        if (reviewQueue.length > 0 && currentCardIndex < reviewQueue.length) {
+          return; 
+        }
+
+        const allCards = generateAllCards();
+        const stats = getCategoryProgress(allCards);
+
+        const makeProgressCard = (key, title, data) => {
+          const percMastered = Math.round((data.learned / (data.total || 1)) * 100) || 0;
+          const percReviewed = Math.round((data.reviewed / (data.total || 1)) * 100) || 0;
+          return `
+            <div class="progress-card">
+              <div class="progress-title">
+                <span>${title}</span>
+              </div>
+              
+              <div style="font-size: 10px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; font-weight: 600;">
+                <span>Mastered</span><span>${percMastered}%</span>
+              </div>
+              <div class="progress-bar-bg" style="margin-bottom: 16px;">
+                <div class="progress-bar-fill" style="width: ${percMastered}%; background: var(--accent);"></div>
+              </div>
+              
+              <div style="font-size: 10px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: flex; justify-content: space-between; font-weight: 600;">
+                <span>Reviewed</span><span>${percReviewed}%</span>
+              </div>
+              <div class="progress-bar-bg" style="height: 3px;">
+                <div class="progress-bar-fill" style="width: ${percReviewed}%; background: #cbd5e1;"></div>
+              </div>
+
+              <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: auto; padding-top: 16px; text-align: right;">
+                ${data.learned} / ${data.total} Mastered
+              </div>
+              <div style="margin-top: 16px;">
+                <button class="start-category-btn" data-category="${key}">Start Daily Review</button>
+              </div>
+            </div>
+          `;
+        };
+
+        panel.innerHTML = `
+          <div class="tracker-dashboard">
+            <div class="tracker-header">
+              <div class="streak-box">
+                <div class="streak-icon">
+                  <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path>
+                  </svg>
+                </div>
+                <div class="streak-info">
+                  <h3>${trackerData.streak} Days</h3>
+                  <p>Current Learning Streak</p>
+                </div>
+              </div>
+              <div class="target-selector">
+                <span>Daily Goal:</span>
+                <select id="targetSelect">
+                  <option value="5" ${trackerData.dailyTarget == 5 ? 'selected' : ''}>5 cards</option>
+                  <option value="10" ${trackerData.dailyTarget == 10 ? 'selected' : ''}>10 cards</option>
+                  <option value="20" ${trackerData.dailyTarget == 20 ? 'selected' : ''}>20 cards</option>
+                  <option value="50" ${trackerData.dailyTarget == 50 ? 'selected' : ''}>50 cards</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="progress-container">
+              ${makeProgressCard('tones', 'Tones & Pinyin', stats.tones)}
+              ${makeProgressCard('grammar', 'Grammar', stats.grammar)}
+              ${makeProgressCard('vocab', 'Vocabulary', stats.vocab)}
+            </div>
+          </div>
+          <div id="reviewSessionContainer" class="review-session fade-in"></div>
+        `;
+
+        document.getElementById("targetSelect").addEventListener("change", (e) => {
+          trackerData.dailyTarget = parseInt(e.target.value);
+          saveTrackerData();
+        });
+
+        panel.querySelectorAll('.start-category-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const cat = e.target.dataset.category;
+            prepareDailyQueue(cat);
+            
+            if (reviewQueue.length === 0) {
+              alert("Awesome! You have fully mastered all available cards in this category.");
+              return;
+            }
+
+            document.querySelector(".tracker-dashboard").style.display = "none";
+            const sessionContainer = document.getElementById("reviewSessionContainer");
+            sessionContainer.style.display = "flex";
+            
+            // Re-trigger animation
+            sessionContainer.classList.remove('animate-enter');
+            void sessionContainer.offsetWidth;
+            sessionContainer.classList.add('animate-enter');
+
+            renderReviewSession();
+          });
+        });
+      }
+
+      function renderReviewSession() {
+        ensureStateMatchesDb();
+        const container = document.getElementById("reviewSessionContainer");
+        
+        if (sessionCompleted >= sessionTarget || currentCardIndex >= reviewQueue.length) {
+          // COMPLETION OF DECK -> Only now we record the streak!
+          markSessionActive();
+
+          container.innerHTML = `
+            <div class="session-complete animate-enter">
+              <h2>Session Complete</h2>
+              <p class="helper" style="margin-bottom: 32px;">You successfully reviewed ${sessionTarget} cards today.</p>
+              <button class="btn-primary" onclick="reviewQueue=[]; renderApp();">Back to Dashboard</button>
+            </div>
+          `;
+          return;
+        }
+
+        const card = reviewQueue[currentCardIndex];
+        const level = trackerData.cardsState[card.id] || 0;
+        let lvlText = level === 0 ? "New/Unsure" : "Seen Once (Swipe Right to Master)";
+        let typeText = card.type === 'tones' ? 'Sound & Pinyin' : card.type === 'grammar' ? 'Grammar' : 'Vocabulary';
+
+        let contentHtml = "";
+        if (card.type === 'grammar') {
+          const ex = card.example;
+          contentHtml = `
+            <div class="fc-grammar-title">${card.title}</div>
+            <div class="fc-meaning" style="font-weight: 400;">${card.desc}</div>
+            ${ex ? `
+              <div class="fc-grammar-ex">
+                <strong style="text-transform:uppercase; letter-spacing:1px; font-size:11px; color:var(--muted);">Example</strong><br/>
+                <span style="font-size:22px; color:var(--accent); font-weight:500; display:inline-block; margin-top:8px; margin-bottom:4px;">${ex.words.map(w=>w.hanzi).join("")}</span><br/>
+                <span style="font-size:13px; color:var(--muted); font-weight:400; letter-spacing:1px; margin-bottom:8px; display:inline-block;">${ex.words.map(w=>w.pinyin).join(" ")}</span><br/>
+                <span style="font-size:14px; color:var(--text); font-weight:500;">${ex.translation}</span>
+              </div>
+            ` : ''}
+          `;
+        } else if (card.type === 'tones') {
+          contentHtml = `
+            <div class="fc-big" style="font-size: 56px; font-weight: 600;">${card.pinyin}</div>
+            <div class="fc-pinyin" style="font-size: 24px; color: var(--muted);">${card.hanzi}</div>
+            <div class="fc-meaning">${card.meaning}</div>
+            ${card.explanation ? `<div class="explanation" style="border:none; padding-top:0;">${card.explanation}</div>` : ''}
+          `;
+        } else {
+          contentHtml = `
+            <div class="fc-big">${card.hanzi}</div>
+            <div class="fc-pinyin">${card.pinyin}</div>
+            <div class="fc-meaning">${card.meaning}</div>
+            ${card.explanation ? `<div class="explanation" style="border:none; padding-top:0;">${card.explanation}</div>` : ''}
+          `;
+        }
+
+        container.innerHTML = `
+          <div class="review-header">
+            <span style="font-weight: 600; letter-spacing: 2px; color: var(--muted); font-size: 13px;">DAILY TARGET: ${sessionCompleted} / ${sessionTarget}</span>
+            <button class="btn-secondary" style="padding: 8px 14px; font-size:10px;" onclick="reviewQueue=[]; renderApp();">Quit</button>
+          </div>
+          
+          <div class="freeze-bar-container">
+            <div class="freeze-bar" id="freezeBar"></div>
+          </div>
+
+          <div class="flashcard-area" id="fcArea">
+            <div class="flashcard animate-pop" id="activeCard">
+              <div class="fc-type">${typeText}</div>
+              <div class="fc-level">${lvlText}</div>
+              ${contentHtml}
+              <button class="btn-secondary play-btn-card" id="fcPlayBtn">Play Audio</button>
+            </div>
+          </div>
+
+          <div class="review-controls">
+            <button class="control-btn btn-fail disabled" id="btnFail">
+              ✕ <span>Swipe Left</span>
+            </button>
+            <button class="control-btn btn-pass disabled" id="btnPass">
+              ✓ <span>Swipe Right</span>
+            </button>
+          </div>
+        `;
+
+        // Intelligent Audio playback
+        document.getElementById("fcPlayBtn").addEventListener("click", async (e) => {
+          e.stopPropagation(); 
+          
+          if (card.type === 'grammar' && card.example) {
+            const audioSeq = card.example.words.flatMap(w => w.audio || []);
+            const fallbackTxt = card.example.words.map(w=>w.hanzi).join("");
+            if (audioSeq.length > 0) {
+              await playAudioSequentially(audioSeq, fallbackTxt);
+              return;
+            }
+            speakText(fallbackTxt);
+          } else if (card.type === 'vocab' && card.audio && card.audio.length > 0) {
+            await playAudioSequentially(card.audio, card.hanzi);
+          } else if (card.type === 'tones') {
+            if (card.audioRef) {
+              const played = await playManifestAudioByKeyTone(card.audioRef.key, card.audioRef.tone);
+              if (played) return;
+            } else if (card.tone && card.id.includes('pinyin_')) {
+              const key = card.id.split('_')[1];
+              const played = await playManifestAudioByKeyTone(key, card.tone);
+              if (played) return;
+            }
+            speakText(card.hanzi || card.pinyin);
+          } else {
+            speakText(card.hanzi || card.title);
+          }
+        });
+
+        // Freeze Timer
+        freezeTimer = 5;
+        const freezeBar = document.getElementById("freezeBar");
+        const btnFail = document.getElementById("btnFail");
+        const btnPass = document.getElementById("btnPass");
+        
+        freezeBar.style.width = "100%";
+        
+        if (freezeInterval) clearInterval(freezeInterval);
+        freezeInterval = setInterval(() => {
+          freezeTimer--;
+          freezeBar.style.width = `${(freezeTimer / 5) * 100}%`;
+          
+          if (freezeTimer <= 0) {
+            clearInterval(freezeInterval);
+            btnFail.classList.remove("disabled");
+            btnPass.classList.remove("disabled");
+            freezeBar.parentElement.style.opacity = "0";
+          }
+        }, 1000);
+
+        // Buttons
+        btnFail.addEventListener("click", () => {
+          if (freezeTimer > 0) return;
+          const cardEl = document.getElementById("activeCard");
+          cardEl.style.animation = 'none';
+          cardEl.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s';
+          cardEl.style.transform = `translate(-200%, 0) rotate(-20deg)`;
+          cardEl.style.opacity = "0";
+          setTimeout(() => handleCardAnswer(false), 300);
+        });
+        
+        btnPass.addEventListener("click", () => {
+          if (freezeTimer > 0) return;
+          const cardEl = document.getElementById("activeCard");
+          cardEl.style.animation = 'none';
+          cardEl.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s';
+          cardEl.style.transform = `translate(200%, 0) rotate(20deg)`;
+          cardEl.style.opacity = "0";
+          setTimeout(() => handleCardAnswer(true), 300);
+        });
+
+        // Drag/Swipe Logic
+        const cardEl = document.getElementById("activeCard");
+        
+        const handleDragStart = (e) => {
+          if (freezeTimer > 0) return;
+          isDragging = true;
+          
+          // Clear any conflicting listeners/animations to guarantee clean movement
+          cardEl.style.animation = 'none';
+          cardEl.style.transition = 'none';
+          
+          startX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+          currentX = startX; 
+          
+          document.addEventListener('mousemove', handleDragMove);
+          document.addEventListener('mouseup', handleDragEnd);
+          document.addEventListener('touchmove', handleDragMove, {passive: false});
+          document.addEventListener('touchend', handleDragEnd);
+        };
+
+        const handleDragMove = (e) => {
+          if (!isDragging || freezeTimer > 0) return;
+          if (e.cancelable && e.type.includes('touch')) e.preventDefault(); // Prevent page scroll while swiping
+          
+          currentX = e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+          const diffX = currentX - startX;
+          const rotation = diffX * 0.05;
+          cardEl.style.transform = `translate(${diffX}px, 0) rotate(${rotation}deg)`;
+          
+          if (diffX > 50) cardEl.style.borderColor = "var(--success)";
+          else if (diffX < -50) cardEl.style.borderColor = "var(--danger)";
+          else cardEl.style.borderColor = "var(--border)";
+        };
+
+        const handleDragEnd = () => {
+          if (!isDragging || freezeTimer > 0) return;
+          isDragging = false;
+          
+          document.removeEventListener('mousemove', handleDragMove);
+          document.removeEventListener('mouseup', handleDragEnd);
+          document.removeEventListener('touchmove', handleDragMove);
+          document.removeEventListener('touchend', handleDragEnd);
+          
+          const diffX = currentX - startX;
+          if (diffX > 100) {
+            cardEl.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s';
+            cardEl.style.transform = `translate(200%, 0) rotate(20deg)`;
+            cardEl.style.opacity = "0";
+            setTimeout(() => handleCardAnswer(true), 300);
+          } else if (diffX < -100) {
+            cardEl.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s';
+            cardEl.style.transform = `translate(-200%, 0) rotate(-20deg)`;
+            cardEl.style.opacity = "0";
+            setTimeout(() => handleCardAnswer(false), 300);
+          } else {
+            // Recenter smoothly if threshold not met
+            cardEl.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s ease';
+            cardEl.style.transform = 'translate(0px, 0px) rotate(0deg)';
+            cardEl.style.borderColor = "var(--border)";
+          }
+        };
+
+        cardEl.addEventListener("mousedown", handleDragStart);
+        cardEl.addEventListener("touchstart", handleDragStart);
+      }
+
+      // --- Database Rendering Logic ---
+      function getDisplayInitial(n) { return "∅" === n ? "" : n; }
+      function getAvailableFinals(n) { return validFinalsByInitial[n] || []; }
+      function normalizeBuilderKey(n, o) { return "∅" === n && "i" === o ? "yi" : "∅" === n && "u" === o ? "wu" : `${getDisplayInitial(n)}${o}`; }
+      function ensureSelectedFinalIsValid() {
+        const avail = getAvailableFinals(appState.selectedInitial);
+        if (!avail.includes(appState.selectedFinal)) appState.selectedFinal = avail[0] || "a";
+      }
+
+      function renderTopTabs() {
+        ensureStateMatchesDb();
+        const container = document.getElementById("topTabs");
+        container.innerHTML = [
+          { id: "tones", label: "Tones" },
+          { id: "pinyin", label: "Pinyin Builder" },
+          { id: "grammar", label: "Grammar" },
+          { id: "vocabulary", label: "Vocabulary" }
+        ].map(t => `<button class="${appState.dbActiveTab===t.id?"active":""}" data-tab="${t.id}">${t.label}</button>`).join("");
+        
+        container.querySelectorAll("button").forEach(btn => btn.addEventListener("click", () => {
+          appState.dbActiveTab = btn.dataset.tab;
+          renderDatabase();
+        }));
+      }
+
+      function renderSubNav() {
+        ensureStateMatchesDb();
+        const nav = document.getElementById("dbSubNav");
+        if (appState.dbActiveTab === "tones") {
+          nav.innerHTML = '<div class="label" style="background:transparent; border:none; padding:0;">Browse tones by vowel</div><div class="chip-grid" id="vowelChips"></div>';
+          const grid = document.getElementById("vowelChips");
+          grid.innerHTML = vowels.map(v => `<button class="chip ${appState.activeVowel===v?"active":""}" data-vowel="${v}">${v}</button>`).join("");
+          grid.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { appState.activeVowel = c.dataset.vowel; renderDatabase(); }));
+        } else if (appState.dbActiveTab === "pinyin") {
+          ensureSelectedFinalIsValid();
+          nav.innerHTML = '<div class="label" style="background:transparent; border:none; padding:0;">Pinyin Builder</div><div class="section" style="margin-top:0; padding-top:0; border-top:none;"><div class="label" style="background:transparent; border:none; padding:0; margin-top:8px;">Initials</div><div class="chip-grid" id="initialChips"></div></div><div class="section" style="margin-top:16px; padding-top:16px;"><div class="label" style="background:transparent; border:none; padding:0;">Finals</div><div class="chip-grid" id="finalChips"></div></div>';
+          
+          const iGrid = document.getElementById("initialChips");
+          iGrid.innerHTML = initials.map(i => `<button class="chip small ${appState.selectedInitial===i?"active":""}" data-initial="${i}">${i}</button>`).join("");
+          iGrid.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { appState.selectedInitial = c.dataset.initial; ensureSelectedFinalIsValid(); renderDatabase(); }));
+          
+          const fGrid = document.getElementById("finalChips");
+          fGrid.innerHTML = getAvailableFinals(appState.selectedInitial).map(f => `<button class="chip small ${appState.selectedFinal===f?"active":""}" data-final="${f}">${f}</button>`).join("");
+          fGrid.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { appState.selectedFinal = c.dataset.final; renderDatabase(); }));
+        } else if (appState.dbActiveTab === "grammar") {
+          nav.innerHTML = '<div class="label" style="background:transparent; border:none; padding:0;">Grammar structures</div><p class="helper" style="margin: 8px 0; font-size:12px;">Click any structure to explore examples, color coding, and audio.</p><div class="chip-grid" id="grammarChips"></div>';
+          const grid = document.getElementById("grammarChips");
+          grid.innerHTML = grammarData.map(g => `<button class="chip small ${appState.activeGrammar===g.id?"active":""}" data-id="${g.id}">${g.id.replace("g","")}. ${g.title.replace(/^\d+\.\s*/,"")}</button>`).join("");
+          grid.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { appState.activeGrammar = c.dataset.id; renderDatabase(); }));
+        } else {
+          const cats = Object.keys(vocabularyData);
+          nav.innerHTML = '<div class="label" style="background:transparent; border:none; padding:0;">Vocabulary categories</div><p class="helper" style="margin: 8px 0; font-size:12px;">Browse foundational beginner words by function and theme.</p><div class="chip-grid" id="vocabChips"></div>';
+          const grid = document.getElementById("vocabChips");
+          grid.innerHTML = cats.map(cat => `<button class="chip small ${appState.activeVocabCategory===cat?"active":""}" data-cat="${cat}">${cat.charAt(0).toUpperCase()+cat.slice(1)}</button>`).join("");
+          grid.querySelectorAll(".chip").forEach(c => c.addEventListener("click", () => { appState.activeVocabCategory = c.dataset.cat; renderDatabase(); }));
+        }
+      }
+
+      async function playDBToneCardAudio(idx) {
+        ensureStateMatchesDb();
+        ensureStateMatchesDb();
+        const item = (toneDatabase[appState.activeVowel] || [])[idx];
+        if (item) {
+          if (item.audioRef) {
+            if (await playManifestAudioByKeyTone(item.audioRef.key, item.audioRef.tone)) return;
+          }
+          speakText(item.hanzi || item.pinyin);
+        }
+      }
+
+      function renderDatabaseContent() {
+        ensureStateMatchesDb();
+        const panel = document.getElementById("contentPanel");
+        
+        if (appState.dbActiveTab === "tones") {
+          const items = toneDatabase[appState.activeVowel] || [];
+          const neutralItems = getNeutralToneItems();
+          panel.innerHTML = `<div class="label">Tone Map</div><h3>Four tones on vowel “${appState.activeVowel}”</h3><div class="tone-grid">${items.map((n,o)=>`<div class="card"><div class="label">Tone ${o+1}</div><div class="big">${n.hanzi}</div><div class="pinyin">${n.pinyin}</div><div class="meaning">${n.meaning}</div><div class="actions"><button class="btn-secondary tone-play-btn" data-index="${o}">Play</button></div></div>`).join("")}</div>${neutralItems.length ? `<div class="section"><h3>The Neutral Tone (Non-Tone)</h3><p class="helper" style="margin-left:0; text-align:left;">Some syllables in Chinese do not use one of the four main tones. This is often called the neutral tone, or the fifth tone. It is pronounced lightly and quickly.</p><div class="tone-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); margin-top:24px;">${neutralItems.map(item => `<div class="card"><div class="label" style="border-color: transparent;">Neutral</div><div class="big">${item.hanzi || '—'}</div><div class="pinyin">${item.pinyin}</div><div class="meaning">${item.meaning || item.note || 'Neutral tone'}</div></div>`).join("")}</div></div>` : ''}`;
+          panel.querySelectorAll(".tone-play-btn").forEach(btn => btn.addEventListener("click", () => playDBToneCardAudio(Number(btn.dataset.index))));
+
+        } else if (appState.dbActiveTab === "pinyin") {
+          ensureSelectedFinalIsValid();
+          const key = normalizeBuilderKey(appState.selectedInitial, appState.selectedFinal);
+          const mapRes = combinationMap[key];
+          const displayPinyin = key || appState.selectedFinal;
+
+          panel.innerHTML = `<div class="builder-summary"><div class="summary-card"><div class="k">Initial</div><div class="v">${appState.selectedInitial}</div></div><div class="summary-card"><div class="k">Final</div><div class="v">${appState.selectedFinal}</div></div><div class="summary-card"><div class="k">Combined</div><div class="v">${displayPinyin}</div></div></div>`;
+          if (mapRes) {
+            panel.innerHTML += `<div class="section"><h3>Representative words</h3><div class="tone-grid">${mapRes.map(n=>`<div class="card ${!n.common?"uncommon":""}"><div class="label">Tone ${n.tone}</div><div class="big">${!n.common?"—":n.hanzi}</div><div class="pinyin">${n.pinyin}</div><div class="meaning">${!n.common?"Not commonly used for this tone selection.":n.meaning}</div>${n.note?`<div class="note">${n.note}</div>`:""}<div class="actions">${!n.common?"":`<button class="btn-secondary builder-play-btn" data-key="${key}" data-tone="${n.tone}">Play</button>`}</div></div>`).join("")}</div></div>`;
+            panel.querySelectorAll(".builder-play-btn").forEach(btn => btn.addEventListener("click", async () => {
+              if(!(await playManifestAudioByKeyTone(btn.dataset.key, Number(btn.dataset.tone)))) alert("No cached audio found for this item.");
+            }));
+          } else {
+            panel.innerHTML += `<div class="section"><div class="empty">No mapped example set is stored for <strong>${displayPinyin}</strong>.</div></div>`;
+          }
+
+        } else if (appState.dbActiveTab === "grammar") {
+          const item = grammarData.find(n => n.id === appState.activeGrammar) || grammarData[0];
+          panel.innerHTML = `<div class="label">Grammar</div><h3>${item.title}</h3><p class="helper" style="margin-left:0; text-align:left;">${item.explanation}</p><div class="grammar-structure">${item.structure.map(n=>`<div class="struct-box type-bg-${n.type}">${n.label}</div>`).join("")}</div><div class="section"><h3>Examples</h3>${item.examples.map((n,o)=>`<div class="sentence-block" data-sentence-audio='${JSON.stringify(n.words.flatMap(n=>n.audio||[])).replace(/'/g,"&apos;")}' data-sentence-text="${n.words.map(w=>w.hanzi).join("")}" data-sentence-pinyin="${n.words.map(w=>w.pinyin||'').join(' ')}"><div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px;"><div class="label" style="margin-bottom:0;">Example ${o+1}</div><button class="btn-secondary sentence-play-btn" type="button">Play sentence</button></div><div class="meaning" style="font-size:16px; color:var(--accent); font-weight:600; margin-bottom:20px;">${n.translation}</div><div class="words-container">${n.words.map(w=>`<div class="word-box" data-audio='${JSON.stringify(w.audio||[]).replace(/'/g,"&apos;")}' data-word-text="${w.hanzi}" data-word-pinyin="${w.pinyin || ''}"><div class="word-hz">${w.hanzi}</div><div class="word-py">${w.pinyin}</div><div class="word-type type-${w.type}">${w.label}</div></div>`).join("")}</div></div>`).join("")}</div>`;
+          panel.querySelectorAll(".word-box").forEach(btn => btn.addEventListener("click", async () => {
+            const arr = JSON.parse(btn.dataset.audio || "[]");
+            const fallback = btn.dataset.wordText || btn.querySelector('.word-hz').innerText;
+            const pinyin = btn.dataset.wordPinyin || "";
+            if (await playForcedWordAudio(fallback, pinyin)) return;
+            if (!(await playManifestUtterance("word", fallback, pinyin))) {
+              if(arr.length) await playAudioSequentially(arr, fallback); else speakText(fallback);
+            }
+          }));
+          panel.querySelectorAll(".sentence-play-btn").forEach(btn => btn.addEventListener("click", async () => {
+            const block = btn.closest(".sentence-block");
+            const arr = JSON.parse(block && block.dataset.sentenceAudio || "[]");
+            const fallback = (block && block.dataset.sentenceText) || Array.from(block.querySelectorAll('.word-hz')).map(el => el.innerText).join("");
+            const pinyin = (block && block.dataset.sentencePinyin) || "";
+            if (!(await playManifestUtterance("sentence", fallback, pinyin))) {
+              if(arr.length) await playAudioSequentially(arr, fallback); else speakText(fallback);
+            }
+          }));
+
+        } else {
+          const list = vocabularyData[appState.activeVocabCategory] || [];
+          panel.innerHTML = `<div class="label">Vocabulary</div><h3>${appState.activeVocabCategory.charAt(0).toUpperCase()+appState.activeVocabCategory.slice(1)}</h3><p class="helper" style="margin-left:0; text-align:left;">Click a card to hear the pronunciation sequence for the word.</p><div class="vocab-grid">${list.map(n=>`<div class="card vocab-card" data-audio='${JSON.stringify(n.audio||[]).replace(/'/g,"&apos;")}' data-word-text="${n.hanzi}" data-word-pinyin="${n.pinyin || ''}"><div class="big">${n.hanzi}</div><div class="pinyin">${n.pinyin}</div><div class="meaning">${n.meaning}</div><div class="explanation">${n.explanation}</div><div class="actions"><button class="btn-secondary">Play</button></div></div>`).join("")}</div>`;
+          panel.querySelectorAll(".vocab-card").forEach(btn => btn.addEventListener("click", async () => {
+            const arr = JSON.parse(btn.dataset.audio || "[]");
+            const fallback = btn.dataset.wordText || btn.querySelector('.big').innerText;
+            const pinyin = btn.dataset.wordPinyin || "";
+            if (await playForcedWordAudio(fallback, pinyin)) return;
+            if (!(await playManifestUtterance("word", fallback, pinyin))) {
+              if(arr.length) await playAudioSequentially(arr, fallback); else speakText(fallback);
+            }
+          }));
+        }
+      }
+
+      function renderDatabase() {
+        ensureStateMatchesDb();
+        ensureSelectedFinalIsValid();
+        renderTopTabs();
+        renderSubNav();
+        renderDatabaseContent();
+      }
+
+      // --- Central Application Controller ---
+      function updateNavStyles() {
+        document.getElementById('navTracker').classList.toggle('active', appState.mode === 'tracker');
+        document.getElementById('navDatabase').classList.toggle('active', appState.mode === 'database');
+      }
+
+      function triggerAnimations() {
+        const els = [
+          document.getElementById("heroSection"), 
+          document.getElementById("dbTopTabs"), 
+          document.getElementById("dbSubNav"), 
+          document.getElementById("contentPanel")
+        ];
+        
+        els.forEach(el => {
+          if(el && el.style.display !== "none") {
+            el.classList.remove('animate-enter');
+            void el.offsetWidth; // Force Reflow
+            el.classList.add('animate-enter');
+          }
+        });
+      }
+
+      function renderApp() {
+        ensureStateMatchesDb();
+        const heroDesc = document.getElementById("heroDesc");
+        const heroTitle = document.getElementById("heroTitle");
+        const dbTopTabs = document.getElementById("dbTopTabs");
+        const dbSubNav = document.getElementById("dbSubNav");
+        
+        if (appState.mode === 'tracker') {
+          heroTitle.textContent = "DAILY REVIEW";
+          heroDesc.textContent = "Swipe right when you know a card. Swipe left to review it again. Pass a card twice to master it.";
+          dbTopTabs.style.display = "none";
+          dbSubNav.style.display = "none";
+          renderReviewDashboard();
+        } else {
+          heroTitle.textContent = "HANZICORE DATABASE";
+          heroDesc.textContent = "All you need to know about Chinese to get started";
+          dbTopTabs.style.display = "block";
+          dbSubNav.style.display = "block";
+          reviewQueue = []; // Clear active tracker session
+          renderDatabase();
+        }
+        
+        triggerAnimations();
+      }
+
+      // Navigation Event Listeners
+      document.getElementById('navTracker').addEventListener('click', (e) => {
+        e.preventDefault();
+        if(appState.mode === 'tracker') return;
+        appState.mode = 'tracker';
+        updateNavStyles();
+        renderApp();
+      });
+
+      document.getElementById('navDatabase').addEventListener('click', (e) => {
+        e.preventDefault();
+        if(appState.mode === 'database') return;
+        appState.mode = 'database';
+        updateNavStyles();
+        renderApp();
+      });
+
+      // --- Initialization ---
+      setTimeout(() => {
+        loadTrackerData();
+        setupAudioLoaderControls();
+        loadAudioManifest();
+        renderApp();
+      }, 0);
+    </script>
+  </body>
+</html>
