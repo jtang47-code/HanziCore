@@ -274,7 +274,7 @@
         border-color: var(--muted);
       }
       
-      /* Shared Grid & Cards */
+      /* Shared Grid & Compact Cards */
       .section {
         margin-top: 32px;
         padding-top: 24px;
@@ -283,19 +283,20 @@
       
       .tone-grid, .vocab-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 16px;
         margin-top: 20px;
       }
       
       .card {
         border: 1px solid var(--border);
         border-radius: var(--radius);
-        padding: 24px;
+        padding: 16px;
         background: #fff;
         display: flex;
         flex-direction: column;
         transition: var(--transition);
+        justify-content: flex-start;
       }
       
       .card:hover {
@@ -307,61 +308,94 @@
         background: #fafafa;
         border-style: dashed;
       }
+
+      /* Layout sub-wrappers to condense vertical space */
+      .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .card-hz-py {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+      }
       
       .big {
-        font-size: 40px;
+        font-size: 32px;
         font-weight: 300;
-        margin-bottom: 8px;
+        margin-bottom: 0;
         color: var(--accent);
+        line-height: 1.1;
       }
       
       .pinyin {
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 400;
         letter-spacing: 1px;
         color: var(--muted);
-        margin-bottom: 12px;
+        margin-bottom: 0;
       }
       
       .meaning {
         color: var(--text);
-        margin-bottom: 12px;
-        line-height: 1.6;
-        font-size: 14px;
+        margin-bottom: 0;
+        line-height: 1.5;
+        font-size: 13px;
         font-weight: 500;
       }
       
       .explanation {
-        margin-top: auto;
-        padding-top: 16px;
+        margin-top: 10px;
+        padding-top: 10px;
         border-top: 1px solid var(--border);
-        font-size: 13px;
+        font-size: 12px;
         color: var(--muted);
-        line-height: 1.6;
-        margin-bottom: 16px;
+        line-height: 1.5;
         font-weight: 300;
       }
       
       .label {
-        display: inline-block;
+        display: inline-flex;
         background: transparent;
         color: var(--muted);
         border: 1px solid var(--border);
         border-radius: 2px;
         padding: 4px 8px;
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 1px;
-        margin-bottom: 12px;
-        align-self: flex-start;
+        margin-bottom: 0;
       }
-      
-      .actions {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        margin-top: auto;
+
+      .compact-play {
+        padding: 4px 10px;
+        font-size: 10px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 4px;
+        letter-spacing: 1px;
+        cursor: pointer;
+      }
+
+      .compact-play svg {
+        width: 10px;
+        height: 10px;
+        fill: currentColor;
+      }
+
+      .note {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 8px;
+        font-style: italic;
       }
 
       /* Tracker Dashboard Styles */
@@ -543,11 +577,12 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        padding: 32px;
+        padding: 56px 32px 32px;
         text-align: center;
         transform-origin: bottom center;
         user-select: none;
         cursor: grab;
+        overflow: hidden;
       }
       
       .flashcard:active {
@@ -556,13 +591,13 @@
       
       .fc-type {
         position: absolute;
-        top: 20px;
-        left: 20px;
+        top: 16px;
+        left: 16px;
         color: var(--muted);
         border: 1px solid var(--border);
-        padding: 4px 10px;
+        padding: 4px 8px;
         border-radius: 2px;
-        font-size: 10px;
+        font-size: 9px;
         text-transform: uppercase;
         letter-spacing: 1px;
         font-weight: 600;
@@ -570,9 +605,9 @@
       
       .fc-level {
         position: absolute;
-        top: 20px;
-        right: 20px;
-        font-size: 10px;
+        top: 16px;
+        right: 16px;
+        font-size: 9px;
         text-transform: uppercase;
         letter-spacing: 1px;
         color: var(--muted);
@@ -583,6 +618,7 @@
         font-size: 64px;
         font-weight: 300;
         margin-bottom: 12px;
+        margin-top: 0;
         color: var(--accent);
         line-height: 1.1;
       }
@@ -606,9 +642,12 @@
         font-size: 18px;
         font-weight: 600;
         margin-bottom: 16px;
+        margin-top: 0;
         color: var(--accent);
         text-transform: uppercase;
         letter-spacing: 1px;
+        line-height: 1.4;
+        padding: 0 8px;
       }
       
       .fc-grammar-ex {
@@ -744,6 +783,7 @@
         border-radius: var(--radius);
         padding: 20px;
         background: #fff;
+        text-align: center;
       }
       .k {
         font-size: 10px;
@@ -937,15 +977,30 @@
           margin: 0;
           background: var(--panel);
           border-bottom: 1px solid var(--border);
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: none;
         }
         
-        .pill-switcher gap {
-          gap: 12px;
+        .pill-container::-webkit-scrollbar {
+          display: none;
+        }
+        
+        .pill-switcher {
+          display: flex;
+          flex-wrap: nowrap;
+          justify-content: flex-start;
+          gap: 24px;
+          padding: 0 20px;
+          border-bottom: none;
+          width: max-content;
+          min-width: 100%;
         }
         
         .pill-switcher button {
-          font-size: 11px;
-          padding: 12px 6px;
+          font-size: 12px;
+          padding: 14px 4px;
+          white-space: nowrap;
         }
         
         .audio-loader {
@@ -969,19 +1024,18 @@
         
         /* Tightened spacing for grids */
         .tone-grid, .vocab-grid, .progress-container {
+          grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* slightly narrower to stack tightly */
           gap: 12px;
           margin-top: 16px;
         }
         
-        .card, .progress-card {
-          padding: 16px;
-        }
+        .card { padding: 12px; }
         
         h2, h3 { font-size: 14px; margin-bottom: 12px; }
-        .big { font-size: 32px; margin-bottom: 4px; }
-        .pinyin { font-size: 15px; margin-bottom: 8px; }
-        .meaning { font-size: 13px; margin-bottom: 8px; }
-        .explanation { font-size: 12px; padding-top: 12px; margin-bottom: 12px; }
+        .big { font-size: 28px; }
+        .pinyin { font-size: 14px; }
+        .meaning { font-size: 12px; }
+        
         .chip { padding: 6px 12px; font-size: 11px; }
         .chip.small { padding: 4px 8px; font-size: 10px; }
         .section { margin-top: 24px; padding-top: 20px; }
@@ -999,14 +1053,14 @@
         .target-selector { width: 100%; justify-content: space-between; margin-top: 8px; }
         
         /* Flashcard Area compression */
-        .flashcard-area { height: 320px; margin-bottom: 24px; }
-        .flashcard { padding: 20px; }
-        .fc-type { top: 12px; left: 12px; font-size: 9px; padding: 3px 6px; }
-        .fc-level { top: 12px; right: 12px; font-size: 9px; }
-        .fc-big { font-size: 48px; margin-bottom: 8px; }
+        .flashcard-area { height: 360px; margin-bottom: 24px; }
+        .flashcard { padding: 48px 20px 20px; }
+        .fc-type { top: 12px; left: 12px; font-size: 8px; padding: 3px 6px; }
+        .fc-level { top: 12px; right: 12px; font-size: 8px; }
+        .fc-big { font-size: 48px; margin-bottom: 8px; margin-top: 0; }
         .fc-pinyin { font-size: 16px; margin-bottom: 12px; }
         .fc-meaning { font-size: 14px; }
-        .fc-grammar-title { font-size: 16px; margin-bottom: 8px; }
+        .fc-grammar-title { font-size: 15px; margin-bottom: 12px; margin-top: 0; line-height: 1.4; padding: 0; }
         .fc-grammar-ex { padding: 12px; margin-top: 12px; }
         .fc-grammar-ex span:nth-of-type(1) { font-size: 18px; }
         
@@ -1021,8 +1075,14 @@
         .word-hz { font-size: 24px; margin-bottom: 4px; }
         .word-py { font-size: 12px; margin-bottom: 8px; }
         .word-type { font-size: 8px; padding: 3px 6px; }
-        .builder-summary { grid-template-columns: 1fr; gap: 12px; }
-        .summary-card { padding: 16px; }
+        .builder-summary {
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+          margin-top: 12px;
+        }
+        .summary-card { padding: 12px 8px; }
+        .summary-card .k { font-size: 9px; margin-bottom: 4px; }
+        .summary-card .v { font-size: 20px; }
       }
     </style>
   </head>
@@ -1968,7 +2028,42 @@
         if (appState.dbActiveTab === "tones") {
           const items = toneDatabase[appState.activeVowel] || [];
           const neutralItems = getNeutralToneItems();
-          panel.innerHTML = `<div class="label">Tone Map</div><h3>Four tones on vowel “${appState.activeVowel}”</h3><div class="tone-grid">${items.map((n,o)=>`<div class="card"><div class="label">Tone ${o+1}</div><div class="big">${n.hanzi}</div><div class="pinyin">${n.pinyin}</div><div class="meaning">${n.meaning}</div><div class="actions"><button class="btn-secondary tone-play-btn" data-index="${o}">Play</button></div></div>`).join("")}</div>${neutralItems.length ? `<div class="section"><h3>The Neutral Tone (Non-Tone)</h3><p class="helper" style="margin-left:0; text-align:left;">Some syllables in Chinese do not use one of the four main tones. This is often called the neutral tone, or the fifth tone. It is pronounced lightly and quickly.</p><div class="tone-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); margin-top:24px;">${neutralItems.map(item => `<div class="card"><div class="label" style="border-color: transparent;">Neutral</div><div class="big">${item.hanzi || '—'}</div><div class="pinyin">${item.pinyin}</div><div class="meaning">${item.meaning || item.note || 'Neutral tone'}</div></div>`).join("")}</div></div>` : ''}`;
+          panel.innerHTML = `
+            <div class="label">Tone Map</div><h3>Four tones on vowel “${appState.activeVowel}”</h3>
+            <div class="tone-grid">
+              ${items.map((n,o)=>`
+                <div class="card">
+                  <div class="card-top">
+                    <div class="label">Tone ${o+1}</div>
+                    <button class="btn-secondary tone-play-btn compact-play" data-index="${o}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> PLAY</button>
+                  </div>
+                  <div class="card-hz-py">
+                    <div class="big">${n.hanzi}</div>
+                    <div class="pinyin">${n.pinyin}</div>
+                  </div>
+                  <div class="meaning">${n.meaning}</div>
+                </div>
+              `).join("")}
+            </div>
+            ${neutralItems.length ? `
+              <div class="section">
+                <h3>The Neutral Tone (Non-Tone)</h3>
+                <p class="helper" style="margin-left:0; text-align:left;">Some syllables in Chinese do not use one of the four main tones. This is often called the neutral tone, or the fifth tone. It is pronounced lightly and quickly.</p>
+                <div class="tone-grid" style="margin-top:24px;">
+                  ${neutralItems.map(item => `
+                    <div class="card">
+                      <div class="card-top">
+                        <div class="label" style="border-color: transparent; padding-left: 0;">Neutral</div>
+                      </div>
+                      <div class="card-hz-py">
+                        <div class="big">${item.hanzi || '—'}</div>
+                        <div class="pinyin">${item.pinyin}</div>
+                      </div>
+                      <div class="meaning">${item.meaning || item.note || 'Neutral tone'}</div>
+                    </div>
+                  `).join("")}
+                </div>
+              </div>` : ''}`;
           panel.querySelectorAll(".tone-play-btn").forEach(btn => btn.addEventListener("click", () => playDBToneCardAudio(Number(btn.dataset.index))));
 
         } else if (appState.dbActiveTab === "pinyin") {
@@ -1979,7 +2074,26 @@
 
           panel.innerHTML = `<div class="builder-summary"><div class="summary-card"><div class="k">Initial</div><div class="v">${appState.selectedInitial}</div></div><div class="summary-card"><div class="k">Final</div><div class="v">${appState.selectedFinal}</div></div><div class="summary-card"><div class="k">Combined</div><div class="v">${displayPinyin}</div></div></div>`;
           if (mapRes) {
-            panel.innerHTML += `<div class="section"><h3>Representative words</h3><div class="tone-grid">${mapRes.map(n=>`<div class="card ${!n.common?"uncommon":""}"><div class="label">Tone ${n.tone}</div><div class="big">${!n.common?"—":n.hanzi}</div><div class="pinyin">${n.pinyin}</div><div class="meaning">${!n.common?"Not commonly used for this tone selection.":n.meaning}</div>${n.note?`<div class="note">${n.note}</div>`:""}<div class="actions">${!n.common?"":`<button class="btn-secondary builder-play-btn" data-key="${key}" data-tone="${n.tone}">Play</button>`}</div></div>`).join("")}</div></div>`;
+            panel.innerHTML += `
+              <div class="section">
+                <h3>Representative words</h3>
+                <div class="tone-grid">
+                  ${mapRes.map(n=>`
+                    <div class="card ${!n.common?"uncommon":""}">
+                      <div class="card-top">
+                        <div class="label">Tone ${n.tone}</div>
+                        ${!n.common?"":`<button class="btn-secondary builder-play-btn compact-play" data-key="${key}" data-tone="${n.tone}"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> PLAY</button>`}
+                      </div>
+                      <div class="card-hz-py">
+                        <div class="big">${!n.common?"—":n.hanzi}</div>
+                        <div class="pinyin">${n.pinyin}</div>
+                      </div>
+                      <div class="meaning">${!n.common?"Not commonly used for this tone selection.":n.meaning}</div>
+                      ${n.note?`<div class="note">${n.note}</div>`:""}
+                    </div>
+                  `).join("")}
+                </div>
+              </div>`;
             panel.querySelectorAll(".builder-play-btn").forEach(btn => btn.addEventListener("click", async () => {
               if(!(await playManifestAudioByKeyTone(btn.dataset.key, Number(btn.dataset.tone)))) alert("No cached audio found for this item.");
             }));
@@ -1989,7 +2103,7 @@
 
         } else if (appState.dbActiveTab === "grammar") {
           const item = grammarData.find(n => n.id === appState.activeGrammar) || grammarData[0];
-          panel.innerHTML = `<div class="label">Grammar</div><h3>${item.title}</h3><p class="helper" style="margin-left:0; text-align:left;">${item.explanation}</p><div class="grammar-structure">${item.structure.map(n=>`<div class="struct-box type-bg-${n.type}">${n.label}</div>`).join("")}</div><div class="section"><h3>Examples</h3>${item.examples.map((n,o)=>`<div class="sentence-block" data-sentence-audio='${JSON.stringify(n.words.flatMap(n=>n.audio||[])).replace(/'/g,"&apos;")}' data-sentence-text="${n.words.map(w=>w.hanzi).join("")}" data-sentence-pinyin="${n.words.map(w=>w.pinyin||'').join(' ')}"><div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px;"><div class="label" style="margin-bottom:0;">Example ${o+1}</div><button class="btn-secondary sentence-play-btn" type="button">Play sentence</button></div><div class="meaning" style="font-size:16px; color:var(--accent); font-weight:600; margin-bottom:20px;">${n.translation}</div><div class="words-container">${n.words.map(w=>`<div class="word-box" data-audio='${JSON.stringify(w.audio||[]).replace(/'/g,"&apos;")}' data-word-text="${w.hanzi}" data-word-pinyin="${w.pinyin || ''}"><div class="word-hz">${w.hanzi}</div><div class="word-py">${w.pinyin}</div><div class="word-type type-${w.type}">${w.label}</div></div>`).join("")}</div></div>`).join("")}</div>`;
+          panel.innerHTML = `<div class="label">Grammar</div><h3>${item.title}</h3><p class="helper" style="margin-left:0; text-align:left;">${item.explanation}</p><div class="grammar-structure">${item.structure.map(n=>`<div class="struct-box type-bg-${n.type}">${n.label}</div>`).join("")}</div><div class="section"><h3>Examples</h3>${item.examples.map((n,o)=>`<div class="sentence-block" data-sentence-audio='${JSON.stringify(n.words.flatMap(n=>n.audio||[])).replace(/'/g,"&apos;")}' data-sentence-text="${n.words.map(w=>w.hanzi).join("")}" data-sentence-pinyin="${n.words.map(w=>w.pinyin||'').join(' ')}"><div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:20px;"><div class="label" style="margin-bottom:0;">Example ${o+1}</div><button class="btn-secondary sentence-play-btn compact-play" type="button"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> PLAY SENTENCE</button></div><div class="meaning" style="font-size:16px; color:var(--accent); font-weight:600; margin-bottom:20px;">${n.translation}</div><div class="words-container">${n.words.map(w=>`<div class="word-box" data-audio='${JSON.stringify(w.audio||[]).replace(/'/g,"&apos;")}' data-word-text="${w.hanzi}" data-word-pinyin="${w.pinyin || ''}"><div class="word-hz">${w.hanzi}</div><div class="word-py">${w.pinyin}</div><div class="word-type type-${w.type}">${w.label}</div></div>`).join("")}</div></div>`).join("")}</div>`;
           panel.querySelectorAll(".word-box").forEach(btn => btn.addEventListener("click", async () => {
             const arr = JSON.parse(btn.dataset.audio || "[]");
             const fallback = btn.dataset.wordText || btn.querySelector('.word-hz').innerText;
@@ -2011,7 +2125,25 @@
 
         } else {
           const list = vocabularyData[appState.activeVocabCategory] || [];
-          panel.innerHTML = `<div class="label">Vocabulary</div><h3>${appState.activeVocabCategory.charAt(0).toUpperCase()+appState.activeVocabCategory.slice(1)}</h3><p class="helper" style="margin-left:0; text-align:left;">Click a card to hear the pronunciation sequence for the word.</p><div class="vocab-grid">${list.map(n=>`<div class="card vocab-card" data-audio='${JSON.stringify(n.audio||[]).replace(/'/g,"&apos;")}' data-word-text="${n.hanzi}" data-word-pinyin="${n.pinyin || ''}"><div class="big">${n.hanzi}</div><div class="pinyin">${n.pinyin}</div><div class="meaning">${n.meaning}</div><div class="explanation">${n.explanation}</div><div class="actions"><button class="btn-secondary">Play</button></div></div>`).join("")}</div>`;
+          panel.innerHTML = `
+            <div class="label">Vocabulary</div><h3>${appState.activeVocabCategory.charAt(0).toUpperCase()+appState.activeVocabCategory.slice(1)}</h3>
+            <p class="helper" style="margin-left:0; text-align:left;">Click a card to hear the pronunciation sequence for the word.</p>
+            <div class="vocab-grid">
+              ${list.map(n=>`
+                <div class="card vocab-card" data-audio='${JSON.stringify(n.audio||[]).replace(/'/g,"&apos;")}' data-word-text="${n.hanzi}" data-word-pinyin="${n.pinyin || ''}">
+                  <div class="card-top" style="justify-content: flex-end;">
+                    <button class="btn-secondary compact-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> PLAY</button>
+                  </div>
+                  <div class="card-hz-py">
+                    <div class="big">${n.hanzi}</div>
+                    <div class="pinyin">${n.pinyin}</div>
+                  </div>
+                  <div class="meaning">${n.meaning}</div>
+                  ${n.explanation?`<div class="explanation">${n.explanation}</div>`:""}
+                </div>
+              `).join("")}
+            </div>
+          `;
           panel.querySelectorAll(".vocab-card").forEach(btn => btn.addEventListener("click", async () => {
             const arr = JSON.parse(btn.dataset.audio || "[]");
             const fallback = btn.dataset.wordText || btn.querySelector('.big').innerText;
